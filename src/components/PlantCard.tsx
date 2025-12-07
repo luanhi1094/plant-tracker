@@ -1,5 +1,6 @@
 import React from "react";
 import { Plant, getPlantStatus, calculateHealthScore } from "../models/Plant";
+import { playWaterSound } from "../utils/sound";
 import styles from "./PlantCard.module.css";
 
 interface PlantCardProps {
@@ -8,11 +9,9 @@ interface PlantCardProps {
 }
 
 const PlantCard: React.FC<PlantCardProps> = ({ plant, onWater }) => {
-  // Tính sức khỏe hiện tại thực tế
   const currentHealth = calculateHealthScore(plant);
   const status = getPlantStatus(currentHealth);
 
-  // Format ngày tưới gần nhất
   const lastWateredDate = new Date(plant.lastWatered);
   const formattedDate = lastWateredDate.toLocaleDateString("vi-VN", {
     month: "short",
@@ -20,6 +19,11 @@ const PlantCard: React.FC<PlantCardProps> = ({ plant, onWater }) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const handleWaterClick = () => {
+    playWaterSound();
+    onWater();
+  };
 
   return (
     <div className={styles.card}>
@@ -65,7 +69,7 @@ const PlantCard: React.FC<PlantCardProps> = ({ plant, onWater }) => {
       </div>
 
       {/* Water Button */}
-      <button className={styles.waterButton} onClick={onWater}>
+      <button className={styles.waterButton} onClick={handleWaterClick}>
         💧 Water Plant
       </button>
     </div>
