@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PlantCard from "./components/PlantCard";
+import Statistics from "./components/Statistics";
 import { Plant, createPlant, waterPlant } from "./models/Plant";
 import { savePlantsToStorage, loadPlantsFromStorage } from "./utils/storage";
 import "./App.css";
@@ -91,6 +92,8 @@ const App: React.FC = () => {
       </header>
 
       <main className="app-main">
+        <Statistics plants={plants} />
+        
         <div className="controls">
           <input
             type="text"
