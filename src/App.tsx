@@ -17,6 +17,7 @@ const applyDarkMode = (isDark: boolean) => {
 const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [darkMode, setDarkMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Khởi tạo cây từ localStorage hoặc tạo cây mẫu
   useEffect(() => {
@@ -73,6 +74,12 @@ const App: React.FC = () => {
     applyDarkMode(newDarkMode);
   };
 
+  // Filter plants by search query
+  const filteredPlants = plants.filter((plant) =>
+    plant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    plant.species.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="app">
       <header className="app-header">
@@ -85,18 +92,25 @@ const App: React.FC = () => {
 
       <main className="app-main">
         <div className="controls">
+          <input
+            type="text"
+            placeholder="🔍 Search plants by name or species..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
           <button className="add-button" onClick={handleAddPlant}>
             ➕ Add New Plant
           </button>
         </div>
 
         <div className="plants-grid">
-          {plants.length === 0 ? (
+          {filteredPlants.length === 0 ? (
             <div className="empty-state">
-              <p>No plants yet. Click "Add New Plant" to get started! 🌱</p>
+              <p>{searchQuery ? `No plants match "${searchQuery}"` : "No plants yet. Click \"Add New Plant\" to get started! 🌱"}</p>
             </div>
           ) : (
-            plants.map((plant) => (
+            filteredPlants.map((plant) => (
               <div key={plant.id} className="plant-container">
                 <PlantCard
                   plant={plant}
