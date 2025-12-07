@@ -3,6 +3,7 @@ import PlantCard from "./components/PlantCard";
 import Statistics from "./components/Statistics";
 import { Plant, createPlant, waterPlant } from "./models/Plant";
 import { savePlantsToStorage, loadPlantsFromStorage } from "./utils/storage";
+import { exportPlantsAsJSON, importPlantsFromJSON } from "./utils/export";
 import "./App.css";
 
 // Apply dark mode to document
@@ -75,6 +76,27 @@ const App: React.FC = () => {
     applyDarkMode(newDarkMode);
   };
 
+  // Export plants as JSON
+  const handleExportData = () => {
+    exportPlantsAsJSON(plants);
+  };
+
+  // Import plants from JSON
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importPlantsFromJSON(file)
+        .then((importedPlants) => {
+          setPlants(importedPlants);
+          savePlantsToStorage(importedPlants);
+          alert('Plants imported successfully!');
+        })
+        .catch((error) => {
+          alert(`Import failed: ${error.message}`);
+        });
+    }
+  };
+
   // Filter plants by search query
   const filteredPlants = plants.filter((plant) =>
     plant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,6 +127,18 @@ const App: React.FC = () => {
           <button className="add-button" onClick={handleAddPlant}>
             ➕ Add New Plant
           </button>
+          <button className="export-button" onClick={handleExportData} title="Export plants as JSON">
+            📥 Export
+          </button>
+          <label className="import-button" title="Import plants from JSON">
+            📤 Import
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportData}
+              style={{ display: 'none' }}
+            />
+          </label>
         </div>
 
         <div className="plants-grid">
