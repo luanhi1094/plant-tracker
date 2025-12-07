@@ -4,8 +4,19 @@ import { Plant, createPlant, waterPlant } from "./models/Plant";
 import { savePlantsToStorage, loadPlantsFromStorage } from "./utils/storage";
 import "./App.css";
 
+// Apply dark mode to document
+const applyDarkMode = (isDark: boolean) => {
+  const root = document.documentElement;
+  if (isDark) {
+    root.classList.add('dark-mode');
+  } else {
+    root.classList.remove('dark-mode');
+  }
+};
+
 const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Khởi tạo cây từ localStorage hoặc tạo cây mẫu
   useEffect(() => {
@@ -22,6 +33,11 @@ const App: React.FC = () => {
       ];
       setPlants(initialPlants);
     }
+    
+    // Load dark mode preference
+    const savedDarkMode = localStorage.getItem('plant-tracker-darkmode') === 'true';
+    setDarkMode(savedDarkMode);
+    applyDarkMode(savedDarkMode);
   }, []);
 
   // Lưu cây vào localStorage mỗi khi thay đổi
@@ -49,11 +65,22 @@ const App: React.FC = () => {
     setPlants(plants.filter((plant) => plant.id !== plantId));
   };
 
+  // Toggle dark mode
+  const handleToggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('plant-tracker-darkmode', String(newDarkMode));
+    applyDarkMode(newDarkMode);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>🌿 Digital Plant Watering Tracker</h1>
         <p>Keep your plants healthy and happy!</p>
+        <button className="dark-mode-toggle" onClick={handleToggleDarkMode} title="Toggle dark mode">
+          {darkMode ? "☀️" : "🌙"}
+        </button>
       </header>
 
       <main className="app-main">
