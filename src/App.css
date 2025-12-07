@@ -1,0 +1,137 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: rgba(0, 0, 0, 0.1);
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.app-header h1 {
+  font-size: 36px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.app-header p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.app-main {
+  flex: 1;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.add-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.add-button:active {
+  transform: translateY(0);
+}
+
+.plants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.plant-container {
+  position: relative;
+}
+
+.delete-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: rgba(244, 67, 54, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.delete-button:hover {
+  background: rgba(244, 67, 54, 1);
+  transform: scale(1.1);
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  color: #666;
+  font-size: 18px;
+}
+
+.app-footer {
+  background: rgba(0, 0, 0, 0.1);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 28px;
+  }
+
+  .plants-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-main {
+    padding: 20px;
+  }
+}
