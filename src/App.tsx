@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
 import PlantCard from "./components/PlantCard";
 import { Plant, createPlant, waterPlant } from "./models/Plant";
+import { savePlantsToStorage, loadPlantsFromStorage } from "./utils/storage";
 import "./App.css";
 
 const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
 
-  // Khởi tạo một số cây mẫu
+  // Khởi tạo cây từ localStorage hoặc tạo cây mẫu
   useEffect(() => {
-    const initialPlants = [
-      createPlant("Monstera", "Tropical Plant", "🌴", 4),
-      createPlant("Succulent", "Desert Plant", "🌵", 7),
-      createPlant("Snake Plant", "Indoor Plant", "🌿", 10),
-      createPlant("Pothos", "Climbing Plant", "🍃", 3),
-    ];
-    setPlants(initialPlants);
+    const savedPlants = loadPlantsFromStorage();
+    
+    if (savedPlants && savedPlants.length > 0) {
+      setPlants(savedPlants);
+    } else {
+      const initialPlants = [
+        createPlant("Monstera", "Tropical Plant", "🌴", 4),
+        createPlant("Succulent", "Desert Plant", "🌵", 7),
+        createPlant("Snake Plant", "Indoor Plant", "🌿", 10),
+        createPlant("Pothos", "Climbing Plant", "🍃", 3),
+      ];
+      setPlants(initialPlants);
+    }
   }, []);
+
+  // Lưu cây vào localStorage mỗi khi thay đổi
+  useEffect(() => {
+    if (plants.length > 0) {
+      savePlantsToStorage(plants);
+    }
+  }, [plants]);
 
   // Xử lý tưới cây
   const handleWaterPlant = (plantId: string) => {
