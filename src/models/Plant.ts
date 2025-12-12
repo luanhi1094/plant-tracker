@@ -4,33 +4,50 @@
  */
 
 export interface Plant {
-  id: string;
+  _id?: string; // MongoDB ID (from backend)
+  id?: string; // Local ID (for backward compatibility)
+  userId: string; // User who owns this plant
   name: string;
   species: string; // Loài cây (e.g., "Succulent", "Monstera")
   emoji: string; // Icon cây (e.g., "🌿")
   lastWatered: Date; // Lần tưới gần nhất
   wateringFrequency: number; // Số ngày giữa các lần tưới (e.g., 3 ngày)
   wateringStreak: number; // Số lần tưới liên tiếp (combo)
-  healthScore: number; // Sức khỏe 0-100
-  maxHealthScore: number; // Sức khỏe tối đa (mặc định 100)
+  healthScore?: number; // Sức khỏe 0-100 (local)
+  health?: number; // Sức khỏe 0-100 (from backend)
+  maxHealthScore?: number; // Sức khỏe tối đa (mặc định 100)
 }
 
 /**
  * Tính độ sức khỏe hiện tại dựa trên thời gian tưới gần nhất
  */
-export const calculateHealthScore = (plant: Plant): number => {
-  const now = new Date();
-  const lastWatered = new Date(plant.lastWatered);
-  const daysSinceWatered = (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
+export const calculateHealthScore = (plant: Plant | any): number => {
+  try {
+    // Handle both backend and local plant objects
+    const health = plant.health !== undefined ? plant.health : plant.healthScore;
+    const lastWatered = new Date(plant.lastWatered);
+    const wateringFrequency = plant.wateringFrequency || 3;
 
-  // Nếu chưa tưới quá lâu, sức khỏe không thay đổi
-  if (daysSinceWatered < plant.wateringFrequency) {
-    return plant.healthScore;
+    // Validate
+    if (isNaN(health) || health === undefined) {
+      return 0;
+    }
+
+    const now = new Date();
+    const daysSinceWatered = (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
+
+    // Nếu chưa tưới quá lâu, sức khỏe không thay đổi
+    if (daysSinceWatered < wateringFrequency) {
+      return health;
+    }
+
+    // Mỗi ngày quá hạn, sức khỏe giảm 5 điểm
+    const healthDecay = Math.floor(daysSinceWatered - wateringFrequency) * 5;
+    return Math.max(0, health - healthDecay);
+  } catch (err) {
+    console.error('Error calculating health score:', err, plant);
+    return 0;
   }
-
-  // Mỗi ngày quá hạn, sức khỏe giảm 5 điểm
-  const healthDecay = Math.floor(daysSinceWatered - plant.wateringFrequency) * 5;
-  return Math.max(0, plant.healthScore - healthDecay);
 };
 
 /**

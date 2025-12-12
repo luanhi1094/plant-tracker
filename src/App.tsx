@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
 import PlantCard from "./components/PlantCard";
 import Statistics from "./components/Statistics";
-import { Plant, createPlant, waterPlant } from "./models/Plant";
-import { savePlantsToStorage, loadPlantsFromStorage } from "./utils/storage";
-import { exportPlantsAsJSON, importPlantsFromJSON } from "./utils/export";
+import { Plant } from "./models/Plant";
+import { plantAPI } from "./services/api";
 import "./App.css";
+
+// Generate unique user ID (in production, use real user auth)
+const getUserId = () => {
+  let userId = localStorage.getItem('plant-tracker-userid');
+  if (!userId) {
+    userId = 'user-' + Date.now();
+    localStorage.setItem('plant-tracker-userid', userId);
+  }
+  return userId;
+};
 
 // Apply dark mode to document
 const applyDarkMode = (isDark: boolean) => {
@@ -17,55 +26,82 @@ const applyDarkMode = (isDark: boolean) => {
 };
 
 const App: React.FC = () => {
+  const userId = getUserId();
   const [plants, setPlants] = useState<Plant[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Khởi tạo cây từ localStorage hoặc tạo cây mẫu
+  // Load plants from backend
   useEffect(() => {
-    const savedPlants = loadPlantsFromStorage();
-    
-    if (savedPlants && savedPlants.length > 0) {
-      setPlants(savedPlants);
-    } else {
-      const initialPlants = [
-        createPlant("Monstera", "Tropical Plant", "🌴", 4),
-        createPlant("Succulent", "Desert Plant", "🌵", 7),
-        createPlant("Snake Plant", "Indoor Plant", "🌿", 10),
-        createPlant("Pothos", "Climbing Plant", "🍃", 3),
-      ];
-      setPlants(initialPlants);
-    }
-    
+    const loadPlants = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await plantAPI.getPlants(userId);
+        setPlants(data);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load plants';
+        setError(errorMsg);
+        console.error('Error loading plants:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlants();
+
     // Load dark mode preference
     const savedDarkMode = localStorage.getItem('plant-tracker-darkmode') === 'true';
     setDarkMode(savedDarkMode);
     applyDarkMode(savedDarkMode);
-  }, []);
+  }, [userId]);
 
-  // Lưu cây vào localStorage mỗi khi thay đổi
-  useEffect(() => {
-    if (plants.length > 0) {
-      savePlantsToStorage(plants);
+  // Water plant - call API
+  const handleWaterPlant = async (plantId: string) => {
+    try {
+      const updatedPlant = await plantAPI.waterPlant(plantId);
+      setPlants((prevPlants) =>
+        prevPlants.map((plant) => (plant._id === updatedPlant._id ? updatedPlant : plant))
+      );
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to water plant';
+      setError(errorMsg);
+      console.error('Error watering plant:', err);
     }
-  }, [plants]);
-
-  // Xử lý tưới cây
-  const handleWaterPlant = (plantId: string) => {
-    setPlants((prevPlants) =>
-      prevPlants.map((plant) => (plant.id === plantId ? waterPlant(plant) : plant))
-    );
   };
 
-  // Thêm cây mới
-  const handleAddPlant = () => {
-    const newPlant = createPlant("New Plant", "Unknown", "🌱", 3);
-    setPlants([...plants, newPlant]);
+  // Add plant - call API
+  const handleAddPlant = async () => {
+    const name = prompt("Enter plant name:");
+    if (!name) return;
+
+    const species = prompt("Enter species (optional):") || undefined;
+    const emoji = prompt("Enter emoji (optional, default: 🌱):") || "🌱";
+
+    try {
+      const newPlant = await plantAPI.createPlant(userId, name, species, emoji);
+      setPlants([...plants, newPlant]);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to add plant';
+      setError(errorMsg);
+      console.error('Error adding plant:', err);
+    }
   };
 
-  // Xóa cây
-  const handleDeletePlant = (plantId: string) => {
-    setPlants(plants.filter((plant) => plant.id !== plantId));
+  // Delete plant - call API
+  const handleDeletePlant = async (plantId: string) => {
+    if (!window.confirm("Delete this plant?")) return;
+
+    try {
+      await plantAPI.deletePlant(plantId);
+      setPlants(plants.filter((plant) => plant._id !== plantId));
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete plant';
+      setError(errorMsg);
+      console.error('Error deleting plant:', err);
+    }
   };
 
   // Toggle dark mode
@@ -74,27 +110,6 @@ const App: React.FC = () => {
     setDarkMode(newDarkMode);
     localStorage.setItem('plant-tracker-darkmode', String(newDarkMode));
     applyDarkMode(newDarkMode);
-  };
-
-  // Export plants as JSON
-  const handleExportData = () => {
-    exportPlantsAsJSON(plants);
-  };
-
-  // Import plants from JSON
-  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      importPlantsFromJSON(file)
-        .then((importedPlants) => {
-          setPlants(importedPlants);
-          savePlantsToStorage(importedPlants);
-          alert('Plants imported successfully!');
-        })
-        .catch((error) => {
-          alert(`Import failed: ${error.message}`);
-        });
-    }
   };
 
   // Filter plants by search query
@@ -127,35 +142,32 @@ const App: React.FC = () => {
           <button className="add-button" onClick={handleAddPlant}>
             ➕ Add New Plant
           </button>
-          <button className="export-button" onClick={handleExportData} title="Export plants as JSON">
-            📥 Export
-          </button>
-          <label className="import-button" title="Import plants from JSON">
-            📤 Import
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportData}
-              style={{ display: 'none' }}
-            />
-          </label>
         </div>
 
         <div className="plants-grid">
-          {filteredPlants.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <p>Loading plants...</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <p>❌ Error: {error}</p>
+              <button onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          ) : filteredPlants.length === 0 ? (
             <div className="empty-state">
               <p>{searchQuery ? `No plants match "${searchQuery}"` : "No plants yet. Click \"Add New Plant\" to get started! 🌱"}</p>
             </div>
           ) : (
             filteredPlants.map((plant) => (
-              <div key={plant.id} className="plant-container">
+              <div key={plant._id || plant.id} className="plant-container">
                 <PlantCard
                   plant={plant}
-                  onWater={() => handleWaterPlant(plant.id)}
+                  onWater={() => plant._id && handleWaterPlant(plant._id)}
                 />
                 <button
                   className="delete-button"
-                  onClick={() => handleDeletePlant(plant.id)}
+                  onClick={() => plant._id && handleDeletePlant(plant._id)}
                   title="Delete plant"
                 >
                   🗑️
