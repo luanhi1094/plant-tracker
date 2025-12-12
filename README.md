@@ -2,14 +2,26 @@
 
 A beautiful and interactive web application to track and manage your plant watering schedule. Maintain your plants' health and build daily watering streaks!
 
+**Backend-Powered** | **Real-time Database Sync** | **Production Ready**
+
+## Tech Stack 🛠️
+
+- **Frontend**: React 18 + Vite + TypeScript
+- **Backend**: Node.js + Express + MongoDB Atlas
+- **Database**: MongoDB (cloud-hosted)
+- **Styling**: Tailwind CSS + Custom CSS Modules
+- **API**: RESTful HTTP endpoints
+
 ## Features ✨
 
-- **Plant Management**: Add, view, and delete multiple plants
+- **Plant Management**: Add, view, edit, and delete multiple plants
+- **Database Persistence**: All data synced with MongoDB backend in real-time
 - **Health Tracking**: Monitor plant health score (0-100) with visual health bar
 - **Watering Streak**: Build and maintain consecutive watering streaks 🔥
 - **Smart Health Calculation**: Health degrades over time if plants aren't watered
 - **Responsive Design**: Works beautifully on desktop, tablet, and mobile
 - **Interactive UI**: Beautiful gradient cards with smooth animations
+- **Dark Mode**: Toggle dark mode for comfortable viewing
 
 ## Project Structure 📁
 
@@ -17,10 +29,13 @@ A beautiful and interactive web application to track and manage your plant water
 plant-tracker/
 ├── src/
 │   ├── components/
-│   │   ├── PlantCard.tsx          # Plant card component (displays plant info & watering UI)
+│   │   ├── PlantCard.tsx          # Plant card component
+│   │   ├── Statistics.tsx         # Health stats display
 │   │   └── PlantCard.module.css   # Styles for plant card
 │   ├── models/
 │   │   └── Plant.ts               # Plant data model & business logic
+│   ├── services/
+│   │   └── api.ts                 # Backend API service (NEW)
 │   ├── App.tsx                    # Main app component (state management)
 │   ├── App.css                    # Global app styles
 │   └── index.tsx                  # React entry point
@@ -32,6 +47,31 @@ plant-tracker/
 └── README.md                      # This file
 ```
 
+## Backend Integration 🔗
+
+This app is **fully connected** to a Node.js + Express backend with MongoDB database:
+
+### API Endpoints Used
+```
+GET    /api/plants/:userId      # Fetch all user's plants
+POST   /api/plants              # Create new plant
+PUT    /api/plants/:id          # Update plant info
+PUT    /api/plants/:id/water    # Water plant (update streak)
+DELETE /api/plants/:id          # Delete plant
+```
+
+### Data Persistence
+- All plants are **stored in MongoDB Atlas**
+- Changes sync automatically with backend
+- Data persists across page refreshes
+- Real-time updates via REST API
+
+### API Service
+**File**: `src/services/api.ts`
+- Handles all HTTP communication
+- Manages loading/error states
+- Type-safe API calls with TypeScript
+
 ## File Descriptions 📄
 
 ### `src/models/Plant.ts`
@@ -41,6 +81,14 @@ Defines the core data structure and business logic:
 - **waterPlant()**: Updates plant data when watered (increases health, updates streak)
 - **createPlant()**: Factory function to create new plants
 - **getPlantStatus()**: Returns human-readable plant status based on health
+
+### `src/services/api.ts` (NEW - Backend Integration)
+Handles all API communication:
+- `plantAPI.getPlants()` - Fetch plants from backend
+- `plantAPI.createPlant()` - Save new plant to database
+- `plantAPI.updatePlant()` - Update plant in database
+- `plantAPI.waterPlant()` - Record watering action
+- `plantAPI.deletePlant()` - Remove plant from database
 
 ### `src/components/PlantCard.tsx`
 React component that displays a single plant:
@@ -53,8 +101,8 @@ React component that displays a single plant:
 ### `src/App.tsx`
 Main application component:
 - Manages state for all plants
-- Handles adding/deleting plants
-- Initializes 4 sample plants on startup
+- Fetches plants from backend on mount
+- Handles adding/deleting plants via API
 - Renders the UI layout (header, plant grid, footer)
 - Coordinates plant watering actions
 
@@ -63,6 +111,7 @@ Main application component:
 ### Prerequisites
 - Node.js (v16+)
 - npm or yarn
+- Backend server running on http://localhost:5000
 
 ### Installation
 
@@ -76,12 +125,22 @@ cd d:\plant-tracker
 npm install
 ```
 
-3. **Start development server**
+3. **Ensure backend is running**
+```bash
+# In another terminal
+cd d:\backend
+npm run dev
+# Should see: "MongoDB connected successfully"
+```
+
+4. **Start development server**
 ```bash
 npm run dev
 ```
 
 Server runs at `http://localhost:3000` (opens automatically)
+
+
 
 ### Build for Production
 
